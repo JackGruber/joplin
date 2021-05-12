@@ -1,5 +1,6 @@
 import SearchEngine from './SearchEngine';
 import Note from '../../models/Note';
+import Setting from '../../models/Setting';
 
 export default class SearchEngineUtils {
 	static async notesForQuery(query: string, options: any = null) {
@@ -42,6 +43,12 @@ export default class SearchEngineUtils {
 			if (idWasAutoAdded) delete sortedNotes[idx].id;
 		}
 
+		// Filter completed todos
+		const showCompletedTodos = Setting.value('showCompletedTodos');
+		let filterdNotes = [];
+		if (!showCompletedTodos) {
+			filterdNotes = notes.filter(note => note.is_todo === 0 || (note.is_todo === 1 && note.todo_completed === 0));
+		}
 
 		// Note that when the search engine index is somehow corrupted, it might contain
 		// references to notes that don't exist. Not clear how it can happen, but anyway
@@ -49,9 +56,9 @@ export default class SearchEngineUtils {
 		// issue: https://discourse.joplinapp.org/t/how-to-recover-corrupted-database/9367
 		if (noteIds.length !== notes.length) {
 			// remove null objects
-			return sortedNotes.filter(n => n);
+			return filterdNotes.filter(n => n);
 		} else {
-			return sortedNotes;
+			return filterdNotes;
 		}
 
 	}
